@@ -1,0 +1,12 @@
+# Secretos: la API key nunca entra en el repositorio
+.env
+.env.local
+
+node_modules/
+dist/
+.vite/
+*.log
+.DS_Store
+
+# Volcado local de la documentación (no se publica)
+docs/

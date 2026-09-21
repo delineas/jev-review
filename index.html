@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Jev en acción</title>
+    <style>
+      :root {
+        --bg: #0d0f13;
+        --panel: #14171d;
+        --line: #252a33;
+        --text: #e6e9ef;
+        --dim: #8b93a1;
+        --accent: #e551ba;
+        --ok: #3ec98a;
+        --warn: #e5b451;
+        --bad: #e5606a;
+        color-scheme: dark;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font: 15px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      }
+      code, pre { font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace; font-size: 13px; }
+      header.top { border-bottom: 1px solid var(--line); padding: 28px 20px; }
+      header.top div { max-width: 860px; margin: 0 auto; }
+      h1 { margin: 0 0 6px; font-size: 22px; letter-spacing: -0.01em; }
+      h1 span { color: var(--accent); }
+      h2 { margin: 0 0 4px; font-size: 19px; }
+      h4 { margin: 20px 0 8px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--dim); }
+      main { max-width: 860px; margin: 0 auto; padding: 0 20px 80px; }
+      nav { display: flex; flex-wrap: wrap; gap: 6px; margin: 22px 0 26px; }
+      nav button { border-radius: 999px; }
+      nav button.on { background: var(--accent); border-color: var(--accent); color: #12070f; font-weight: 600; }
+      button {
+        background: var(--panel); color: var(--text); border: 1px solid var(--line);
+        border-radius: 8px; padding: 7px 13px; font: inherit; font-size: 13px; cursor: pointer;
+      }
+      button:hover { border-color: var(--accent); }
+      button.primary { background: var(--accent); border-color: var(--accent); color: #12070f; font-weight: 600; margin-top: 10px; }
+      textarea, input[type="text"] {
+        width: 100%; background: var(--panel); color: var(--text); border: 1px solid var(--line);
+        border-radius: 10px; padding: 12px; font: inherit; resize: vertical; margin-top: 10px;
+      }
+      textarea:focus, input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+      .examples { display: flex; flex-wrap: wrap; gap: 6px; }
+      .blurb { color: var(--dim); margin: 0 0 18px; max-width: 62ch; }
+      .dim { color: var(--dim); }
+      .meta { color: var(--dim); font-size: 13px; margin: 14px 0; }
+      .loading { color: var(--dim); }
+      .error { color: var(--bad); background: #2a1417; border: 1px solid #45222a; border-radius: 8px; padding: 10px 12px; }
+      .verdict {
+        display: flex; gap: 14px; align-items: center; margin-top: 20px;
+        background: var(--panel); border: 1px solid var(--line); border-left: 4px solid var(--dim);
+        border-radius: 10px; padding: 12px 16px;
+      }
+      .verdict p { margin: 2px 0 0; font-size: 13px; }
+      .verdict .prio { font-size: 15px; font-weight: 700; letter-spacing: 0.02em; }
+      .verdict.P1, .verdict.bad { border-left-color: var(--bad); }
+      .verdict.P1 .prio, .verdict.bad .prio { color: var(--bad); }
+      .verdict.P2, .verdict.warn { border-left-color: var(--warn); }
+      .verdict.P2 .prio, .verdict.warn .prio { color: var(--warn); }
+      .verdict.P3, .verdict.ok { border-left-color: var(--ok); }
+      .verdict.P3 .prio, .verdict.ok .prio { color: var(--ok); }
+      .answers { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+      .answer { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; }
+      .answer header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+      .answer header code { color: var(--accent); }
+      .pill { font-size: 11px; border: 1px solid var(--line); border-radius: 999px; padding: 2px 8px; color: var(--dim); margin-left: auto; }
+      .pill.ok { color: var(--ok); border-color: #1f4a36; }
+      .pill.warn { color: var(--warn); border-color: #4a3d1f; }
+      .pill.bad { color: var(--bad); border-color: #4a2229; }
+      .bar { display: grid; grid-template-columns: minmax(70px, 34%) 1fr 42px; gap: 8px; align-items: center; margin: 5px 0; font-size: 13px; }
+      .bar-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--dim); }
+      .bar-track { background: #1d222b; border-radius: 4px; height: 8px; overflow: hidden; }
+      .bar-fill { display: block; height: 100%; width: calc(var(--p) * 100%); background: var(--accent); transition: width 0.25s ease; }
+      .bar-value { text-align: right; font-variant-numeric: tabular-nums; color: var(--dim); }
+      .source { color: var(--dim); font-size: 13px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; margin: 0 0 14px; }
+      .source code { color: var(--accent); }
+      .rating { display: flex; align-items: center; gap: 10px; margin: 18px 0 2px; }
+      .rating .stars { color: var(--accent); font-size: 26px; letter-spacing: 3px; }
+      .rating strong { font-size: 24px; font-variant-numeric: tabular-nums; }
+      .rating .pill { margin-left: 4px; }
+      ol.doc { max-height: 260px; overflow-y: auto; margin: 0; padding: 12px 12px 12px 16px; list-style: none; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; font-size: 13px; }
+      ol.doc li { padding: 3px 6px; border-radius: 4px; color: var(--dim); }
+      ol.doc li code { color: #4a5262; margin-right: 8px; }
+      ol.doc li.hit { background: #2d1430; color: var(--text); }
+      ol.doc li.hit code { color: var(--accent); }
+      blockquote { margin: 16px 0; padding: 12px 16px; background: var(--panel); border-left: 3px solid var(--accent); border-radius: 0 8px 8px 0; }
+      blockquote code { color: var(--accent); margin-right: 8px; }
+      details { margin-top: 20px; border-top: 1px solid var(--line); padding-top: 12px; }
+      summary { cursor: pointer; color: var(--dim); font-size: 13px; }
+      pre { overflow-x: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px; line-height: 1.5; }
+      footer { max-width: 860px; margin: 0 auto; padding: 0 20px 60px; color: var(--dim); font-size: 13px; }
+      a { color: var(--accent); }
+      .sign { margin-top: 28px; padding-top: 18px; border-top: 1px solid var(--line); }
+    </style>
+  </head>
+  <body>
+    <header class="top">
+      <div>
+        <h1>Jev <span>en acción</span></h1>
+        <p class="dim" style="margin: 0; max-width: 64ch">
+          Cuatro cosas que un modelo System One sí sabe hacer: decidir, detectar, señalar y hacerlo
+          rápido. No genera texto; devuelve valores tipados y probabilidades sobre las que ramifica
+          tu código.
+        </p>
+      </div>
+    </header>
+    <main id="app"></main>
+    <footer>
+      Los <code>instructions</code> van en inglés a propósito: el estado puede ser español (y lo es),
+      pero la documentación avisa de que la precisión es mejor con las preguntas en inglés.
+      La clave vive sólo en el servidor de desarrollo; el navegador habla con <code>/api/jev</code>.
+      <p class="sign">Creado con 🧡 por <a href="https://webreactiva.com">webreactiva.com</a></p>
+    </footer>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

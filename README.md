@@ -16,12 +16,31 @@ pantalla.
 ambivalente se queda en 3,5/5 con confianza 0,59 — la duda del modelo es visible
 en la distribución, y el código puede decidir no publicar la nota sin revisar.*
 
+## Por dónde se empieza
+
+**1. Genera una API key** en [console.typesafe.ai/keys](https://console.typesafe.ai/keys).
+**Es gratis**: creas la cuenta, generas la clave y ya puedes llamar a la API.
+
+**2. Ponla en un `.env`** en la raíz del proyecto:
+
+```bash
+cp .env.example .env
+# edita .env y pega la clave que te acaba de dar la consola:
+#   JEV_API_KEY=apik...
+```
+
+**3. Arranca:**
+
 ```bash
 npm install
 npm run dev   # http://localhost:5180
 ```
 
-`JEV_API_KEY` se lee de `.env`. El navegador nunca la ve.
+Y ya está. Si falta la clave, el servidor se niega a arrancar y lo dice, en vez de
+dejarte descubrirlo demo por demo.
+
+> `.env` está en el `.gitignore` y la clave **no baja nunca al navegador**: se queda
+> en el proceso de Node, que es quien llama a la API. Ver [Arquitectura](#arquitectura).
 
 ---
 

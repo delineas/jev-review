@@ -106,6 +106,36 @@
   .rule.dash { stroke: var(--dim); }
   .faint { opacity: .45; }
   #ah path { fill: var(--dim); } #ah-bad path { fill: var(--bad); }
+  /* Qué viaja en una petición: JSON real, no dibujado */
+  .wire { display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "req req" "hop res"; gap: 14px 24px; align-items: start; }
+  .wire .req { grid-area: req; } .wire .res { grid-area: res; } .wire .hop { grid-area: hop; }
+  .wire .pane { border: 1px solid var(--line); border-radius: 14px; background: var(--panel); padding: 14px 16px; min-width: 0; }
+  .wire .k { font: 600 11px var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--dim); margin: 0 0 10px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .grow { font: 600 11px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--text); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 4px 10px; cursor: pointer; }
+  .grow:hover, .grow:focus-visible { border-color: var(--accent); color: var(--accent); }
+  /* ponytail: pantalla completa nativa; .full es el respaldo donde no existe (iPhone) */
+  .wire .pane:fullscreen, .wire .pane.full { position: fixed; inset: 0; z-index: 10; border-radius: 0; border: 0; overflow: auto; padding: 32px max(24px, 5vw); background: var(--panel); }
+  .wire .pane:fullscreen pre, .wire .pane.full pre { font-size: clamp(14px, 1.3vw, 19px); }
+  .wire pre { margin: 0; overflow-x: auto; font: 13px/1.6 var(--mono); }
+  .wire pre i, .legend i { font-style: normal; color: var(--dim); }
+  .wire pre u, .legend u { text-decoration: none; color: var(--llm); }
+  .wire pre b, .legend b { font-weight: 400; color: var(--text); background: color-mix(in srgb, var(--accent) 16%, transparent); border-radius: 3px; }
+  .wire pre em, .legend em { font-style: normal; color: var(--accent); font-weight: 600; }
+  .hop { list-style: none; margin: 14px 0 0; padding: 0; display: grid; gap: 30px; justify-items: center; }
+  .hop li { width: 136px; padding: 12px; border-radius: 10px; text-align: center; display: grid; gap: 2px; font-size: 12px; color: var(--dim); position: relative; }
+  .hop b { font: 600 14px var(--mono); color: var(--text); }
+  .hop .proxy { background: color-mix(in srgb, var(--warn) 14%, var(--panel)); border: 1.5px solid var(--warn); }
+  .hop .proxy b { color: var(--warn); }
+  .hop .engine { background: color-mix(in srgb, var(--accent) 16%, var(--panel)); border: 2px solid var(--accent); }
+  .hop .engine b { font: 700 20px var(--sans); }
+  .hop li + li::before { content: "↓"; position: absolute; top: -26px; left: 50%; transform: translateX(-50%); color: var(--dim); font-size: 18px; }
+  .legend { list-style: none; padding: 0; margin: 14px 0 0; display: flex; flex-wrap: wrap; gap: 8px 24px; font-size: 14px; color: var(--dim); }
+  .legend b, .legend u, .legend em { font-family: var(--mono); font-size: 13px; padding: 0 4px; margin-right: 6px; }
+  @media (max-width: 860px) {
+    .wire { grid-template-columns: 1fr; grid-template-areas: "req" "hop" "res"; }
+    .hop { margin: 0; grid-auto-flow: column; justify-content: center; gap: 36px; }
+    .hop li + li::before { content: "→"; top: 50%; left: -26px; transform: translateY(-50%); }
+  }
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -263,60 +293,74 @@
     <h2>Qué viaja en una petición</h2>
     <p>Un estado y unas preguntas con sus respuestas posibles. Vuelven huecos rellenos, no texto.</p>
     <figure>
-      <div class="canvas">
-        <svg viewBox="0 0 1000 420" role="img" aria-label="Petición JSON con state y questions pasa por el proxy /api/jev hasta Jev y vuelve con answers, probabilidades y usage">
-          <text x="20" y="26" class="m s dim">POST /api/jev · desde el navegador</text>
-          <rect x="20" y="40" width="385" height="360" rx="10" class="box"/>
-          <g class="m s">
-            <text x="36" y="72" class="m s">{</text>
-            <text x="36" y="94" class="m s">  "state": { "ticket": "Llevo tres…" },</text>
-            <text x="36" y="116" class="m s">  "questions": {</text>
-            <text x="36" y="138" class="m s">    "department": {</text>
-            <text x="36" y="160" class="m s">      "type": <tspan class="tj">"choice"</tspan>,</text>
-            <text x="36" y="182" class="m s">      "instructions": "Which team…?",</text>
-            <text x="36" y="204" class="m s">      "criteria": { "billing": "…",</text>
-            <text x="36" y="226" class="m s">        "technical": "…", … } },</text>
-            <text x="36" y="248" class="m s">    "blocked": { "type": <tspan class="tj">"noul"</tspan>,</text>
-            <text x="36" y="270" class="m s">      "instructions": "…is blocked…" },</text>
-            <text x="36" y="292" class="m s">    "frustration": { "type": <tspan class="tj">"score"</tspan>,</text>
-            <text x="36" y="314" class="m s">      "criteria": ["Calm", "Mildly</text>
-            <text x="36" y="336" class="m s">        annoyed", "Frustrated", "Angry"] }</text>
-            <text x="36" y="358" class="m s">  }</text>
-            <text x="36" y="380" class="m s">}</text>
-          </g>
+      <div class="wire">
+        <div class="pane req">
+          <p class="k">POST /api/jev · lo que envía el navegador <button type="button" class="grow" aria-label="Ver la petición a pantalla completa">Ampliar</button></p>
+<pre><code>{
+  <i>"state"</i>: {
+    <i>"ticket"</i>: <b>"Llevo tres días intentando conectar mi cuenta de Stripe y la integración falla con un 500…"</b>
+  },
+  <i>"questions"</i>: {
+    <u>"department"</u>: {
+      <i>"type"</i>: <em>"choice"</em>,
+      <i>"instructions"</i>: <b>"Which team should handle this support ticket?"</b>,
+      <i>"criteria"</i>: {
+        <u>"billing"</u>:   <b>"Charges, invoices, refunds, subscription plans"</b>,
+        <u>"technical"</u>: <b>"Bugs, outages, API or integration failures"</b>,
+        <u>"sales"</u>:     <b>"Pricing questions, upgrades, new contracts"</b>,
+        <u>"account"</u>:   <b>"Login, password, access and account security"</b>
+      }
+    },
+    <u>"blocked"</u>: {
+      <i>"type"</i>: <em>"noul"</em>,
+      <i>"instructions"</i>: <b>"The customer is blocked right now: they cannot use the product…"</b>
+    },
+    <u>"frustration"</u>: {
+      <i>"type"</i>: <em>"score"</em>,
+      <i>"instructions"</i>: <b>"How frustrated does the customer sound?"</b>,
+      <i>"criteria"</i>: [
+        <b>"Calm and factual"</b>,
+        <b>"Mildly annoyed"</b>,
+        <b>"Clearly frustrated but still civil"</b>,
+        <b>"Angry: strong language, insults or threats"</b>
+      ]
+    }
+  }
+}</code></pre>
+        </div>
 
-          <path d="M407 150H428" class="arr"/>
-          <rect x="432" y="110" width="136" height="80" rx="10" class="code"/>
-          <text x="500" y="140" class="c m b tw">/api/jev</text>
-          <text x="500" y="162" class="c s">Node + SDK</text>
-          <text x="500" y="178" class="c s dim">aquí vive la API key</text>
-          <path d="M500 192V226" class="arr"/>
-          <rect x="432" y="230" width="136" height="90" rx="10" class="jev"/>
-          <text x="500" y="266" class="c b" style="font-size:20px">Jev</text>
-          <text x="500" y="288" class="c s dim">no genera texto:</text>
-          <text x="500" y="304" class="c s dim">rellena huecos</text>
-          <path d="M570 275H591" class="arr"/>
+        <ol class="hop" aria-label="Recorrido de la petición">
+          <li class="proxy"><b>/api/jev</b><span>Node + SDK</span><span>aquí vive la API key</span></li>
+          <li class="engine"><b>Jev</b><span>no genera texto:</span><span>rellena huecos</span></li>
+        </ol>
 
-          <text x="595" y="26" class="m s dim">respuesta</text>
-          <rect x="595" y="40" width="385" height="360" rx="10" class="box"/>
-          <g>
-            <text x="611" y="72" class="m s">{</text>
-            <text x="611" y="94" class="m s">  "answers": {</text>
-            <text x="611" y="116" class="m s">    "department": {</text>
-            <text x="611" y="138" class="m s">      "choice": <tspan class="tj">"technical"</tspan>,</text>
-            <text x="611" y="160" class="m s">      "probabilities": {</text>
-            <text x="611" y="182" class="m s">        "technical": <tspan class="tj">0.86</tspan>,</text>
-            <text x="611" y="204" class="m s">        "billing": <tspan class="tj">0.08</tspan>, … },</text>
-            <text x="611" y="226" class="m s">      "confidence": <tspan class="tj">0.86</tspan> },</text>
-            <text x="611" y="248" class="m s">    "blocked": { "noul": <tspan class="tj">0.93</tspan> },</text>
-            <text x="611" y="270" class="m s">    "frustration": { "score": <tspan class="tj">2.1</tspan> }</text>
-            <text x="611" y="292" class="m s">  },</text>
-            <text x="611" y="314" class="m s">  "usage": { "input_tokens": 612 },</text>
-            <text x="611" y="336" class="m s">  "ms": 557</text>
-            <text x="611" y="358" class="m s">}</text>
-          </g>
-        </svg>
+        <div class="pane res">
+          <p class="k">Lo que vuelve <button type="button" class="grow" aria-label="Ver la respuesta a pantalla completa">Ampliar</button></p>
+<pre><code>{
+  <i>"answers"</i>: {
+    <u>"department"</u>: {
+      <i>"choice"</i>: <em>"technical"</em>,
+      <i>"probabilities"</i>: {
+        <u>"technical"</u>: <em>0.86</em>,
+        <u>"billing"</u>:   <em>0.08</em>,
+        <u>"account"</u>:   <em>0.04</em>,
+        <u>"sales"</u>:     <em>0.02</em>
+      },
+      <i>"confidence"</i>: <em>0.86</em>
+    },
+    <u>"blocked"</u>:     { <i>"noul"</i>: <em>0.93</em> },
+    <u>"frustration"</u>: { <i>"score"</i>: <em>2.1</em> }
+  },
+  <i>"usage"</i>: { <i>"input_tokens"</i>: 612 },
+  <i>"ms"</i>: 557
+}</code></pre>
+        </div>
       </div>
+      <ul class="legend">
+        <li><b>texto</b> Lo que Jev lee y juzga: el estado, las instrucciones y los criterios.</li>
+        <li><u>nombre</u> Etiquetas que pones tú para que tu código encuentre cada respuesta.</li>
+        <li><em>valor</em> Tipo de pregunta y huecos que Jev rellena.</li>
+      </ul>
       <figcaption>Los nombres de las preguntas (<code>department</code>, <code>blocked</code>…) son para tu código; Jev sólo lee instrucciones y criterios. La clave no baja nunca al navegador.</figcaption>
     </figure>
   </section>
@@ -752,4 +796,28 @@
       el(g, "text", { x: x(t), y: rows.axis + 24, class: "c m s dim" }, `${t / 1000} s`.replace(".", ","));
     }
   })();
+</script>
+<script>
+  // Ampliar una caja de JSON: pantalla completa si el navegador la da, si no, toda la ventana.
+  for (const btn of document.querySelectorAll(".wire .grow")) {
+    const pane = btn.closest(".pane");
+    const fallback = (on) => {
+      pane.classList.toggle("full", on);
+      btn.textContent = on ? "Cerrar" : "Ampliar";
+    };
+    btn.addEventListener("click", () => {
+      if (document.fullscreenElement) document.exitFullscreen();
+      else if (pane.classList.contains("full")) fallback(false);
+      else if (pane.requestFullscreen) pane.requestFullscreen().catch(() => fallback(true));
+      else fallback(true);
+    });
+  }
+  document.addEventListener("fullscreenchange", () => {
+    for (const btn of document.querySelectorAll(".wire .grow"))
+      btn.textContent = btn.closest(".pane") === document.fullscreenElement ? "Cerrar" : "Ampliar";
+  });
+  document.addEventListener("keydown", (e) => {
+    const open = document.querySelector(".wire .pane.full");
+    if (e.key === "Escape" && open) open.querySelector(".grow").click();
+  });
 </script>

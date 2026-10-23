@@ -23,8 +23,8 @@ jobs:
           sparse-checkout: .github/jev-juez
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
-      - run: node .github/jev-juez/juez.mjs
+          node-version: 24
+      - run: node .github/jev-juez/juez.ts
         env:
           JEV_API_KEY: ${{ secrets.JEV_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

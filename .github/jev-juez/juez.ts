@@ -5,7 +5,7 @@
 //   `necesita-triaje`. Si faltan datos, los pide en un comentario.
 // - PR: «¿el diff hace lo que dice la descripción?» con `noul`. Si no, lo comenta.
 //
-// Sin dependencias: Node 20+ (fetch). Variables: JEV_API_KEY, GITHUB_TOKEN, GITHUB_REPOSITORY,
+// TypeScript sin dependencias ni compilación: Node 22.18+ quita los tipos al ejecutar. Variables: JEV_API_KEY, GITHUB_TOKEN, GITHUB_REPOSITORY,
 // GITHUB_EVENT_NAME, GITHUB_EVENT_PATH. Con DRY_RUN=1 no escribe nada en GitHub.
 
 import { appendFileSync, readFileSync } from "node:fs";
@@ -28,15 +28,19 @@ const DEMOS = {
   "demo:resena": "The live restaurant review score demo",
   "proyecto": "The project as a whole: setup, API key, the Vite dev server and proxy, the SDK, the README",
 };
-const COLORES = { bug: "d73a4a", enhancement: "a2eeef", documentation: "0075ca", question: "d876e3",
+const COLORES: Record<string, string> = { bug: "d73a4a", enhancement: "a2eeef", documentation: "0075ca", question: "d876e3",
   "necesita-triaje": "fbca04", "faltan-datos": "e99695" };
 
-const env = process.env;
+type Choice = { type: "choice"; choice: string; confidence: number; probabilities: Record<string, number> };
+type Noul = { type: "noul"; noul: number };
+type Respuesta<A> = { model: string; answers: A; usage: { input_tokens: number; output_tokens: number }; ms: number };
+
+const env = process.env as Record<string, string>;
 const [owner, repo] = env.GITHUB_REPOSITORY.split("/");
 const evento = JSON.parse(readFileSync(env.GITHUB_EVENT_PATH, "utf8"));
 const seco = env.DRY_RUN === "1";
 
-async function jev(state, questions) {
+async function jev<A>(state: unknown, questions: Record<string, unknown>): Promise<Respuesta<A>> {
   const t0 = performance.now();
   const r = await fetch("https://api.typesafe.ai/v1/systemone", {
     method: "POST",
@@ -48,7 +52,7 @@ async function jev(state, questions) {
   return { ...json, ms: Math.round(performance.now() - t0) };
 }
 
-async function gh(metodo, ruta, cuerpo, accept = "application/vnd.github+json") {
+async function gh(metodo: string, ruta: string, cuerpo?: unknown, accept = "application/vnd.github+json"): Promise<any> {
   if (seco && metodo !== "GET") {
     console.log(`[DRY_RUN] ${metodo} ${ruta}`, cuerpo ?? "");
     return null;
@@ -65,12 +69,12 @@ async function gh(metodo, ruta, cuerpo, accept = "application/vnd.github+json") 
   return accept.endsWith("diff") ? r.text() : r.status === 204 ? null : r.json();
 }
 
-const pct = (p) => `${Math.round(p * 100)} %`;
-const resumen = (texto) => env.GITHUB_STEP_SUMMARY && appendFileSync(env.GITHUB_STEP_SUMMARY, texto + "\n");
+const pct = (p: number) => `${Math.round(p * 100)} %`;
+const resumen = (texto: string) => env.GITHUB_STEP_SUMMARY && appendFileSync(env.GITHUB_STEP_SUMMARY, texto + "\n");
 
-async function juzgarIssue(issue) {
+async function juzgarIssue(issue: { number: number; title: string; body: string | null }) {
   const state = { title: issue.title, body: (issue.body ?? "").slice(0, 8000) };
-  const r = await jev(state, {
+  const r = await jev<{ tipo: Choice; demo: Choice; reproducible: Noul }>(state, {
     tipo: { type: "choice", instructions: "What kind of report is this GitHub issue?", criteria: TIPOS },
     demo: { type: "choice", instructions: "Which part of the jev-review project is the issue about?", criteria: DEMOS },
     reproducible: {
@@ -81,7 +85,7 @@ async function juzgarIssue(issue) {
   const { tipo, demo, reproducible } = r.answers;
 
   // Jev juzga; a partir de aquí decide el código.
-  const etiquetas = [];
+  const etiquetas: string[] = [];
   for (const a of [tipo, demo]) if (a.confidence >= UMBRAL_ETIQUETA) etiquetas.push(a.choice);
   const dudosas = [tipo, demo].filter((a) => a.confidence < UMBRAL_ETIQUETA);
   if (dudosas.length) etiquetas.push("necesita-triaje");
@@ -111,10 +115,10 @@ async function juzgarIssue(issue) {
   console.log(JSON.stringify({ issue: issue.number, etiquetas, respuestas: r.answers, ms: r.ms, usage: r.usage }));
 }
 
-async function juzgarPR(pr) {
+async function juzgarPR(pr: { number: number; title: string; body: string | null }) {
   const diff = await gh("GET", `/pulls/${pr.number}`, null, "application/vnd.github.diff");
   const state = { description: `${pr.title}\n\n${pr.body ?? ""}`.slice(0, 4000), diff: diff.slice(0, 60000) };
-  const r = await jev(state, {
+  const r = await jev<{ coincide: Noul }>(state, {
     coincide: { type: "noul", instructions: "Does `diff` implement the change described in `description`?" },
   });
   const p = r.answers.coincide.noul;

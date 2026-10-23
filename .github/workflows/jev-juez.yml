@@ -1,0 +1,30 @@
+name: jev-juez
+
+on:
+  issues:
+    types: [opened, edited]
+  pull_request:
+    types: [opened, edited, synchronize]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  juzgar:
+    # Que no se juzgue a sí mismo cuando edita una issue
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github/jev-juez
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node .github/jev-juez/juez.mjs
+        env:
+          JEV_API_KEY: ${{ secrets.JEV_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

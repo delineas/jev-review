@@ -36,6 +36,12 @@ type Noul = { type: "noul"; noul: number };
 type Respuesta<A> = { model: string; answers: A; usage: { input_tokens: number; output_tokens: number }; ms: number };
 
 const env = process.env as Record<string, string>;
+if (!env.JEV_API_KEY) {
+  // Un secreto de environment solo llega a los jobs que declaran `environment:`; uno de repositorio llega a todos
+  console.error("Falta JEV_API_KEY. Añádelo como secreto del repositorio (Settings → Secrets and variables → Actions → Repository secrets)" +
+    " o, si lo guardaste en un environment, declara `environment: <nombre>` en el job.");
+  process.exit(1);
+}
 const [owner, repo] = env.GITHUB_REPOSITORY.split("/");
 const evento = JSON.parse(readFileSync(env.GITHUB_EVENT_PATH, "utf8"));
 const seco = env.DRY_RUN === "1";

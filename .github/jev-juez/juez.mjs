@@ -55,7 +55,10 @@ async function gh(metodo, ruta, cuerpo, accept = "application/vnd.github+json") 
   }
   const r = await fetch(`https://api.github.com/repos/${owner}/${repo}${ruta}`, {
     method: metodo,
-    headers: { Authorization: `Bearer ${env.GITHUB_TOKEN}`, Accept: accept, "X-GitHub-Api-Version": "2022-11-28" },
+    headers: {
+      Authorization: `Bearer ${env.GITHUB_TOKEN}`, Accept: accept, "X-GitHub-Api-Version": "2022-11-28",
+      "Content-Type": "application/json",
+    },
     body: cuerpo ? JSON.stringify(cuerpo) : undefined,
   });
   if (!r.ok && r.status !== 422) throw new Error(`GitHub ${metodo} ${ruta}: ${r.status} ${await r.text()}`);
